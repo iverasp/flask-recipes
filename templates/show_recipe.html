@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block head %}
+<script src="/static/js/jquery.linkify.min.js"></script>
+<script>
+$(window).on('load', function () {
+  $('#sources').linkify();
+});
+</script>
+{% endblock head %}
+
+{% block content %}
+
+<section id="add_recipe">
+  <div class="panel panel-default">
+   <div class="panel-heading">
+     <h4 class="panel-title">
+       {{ recipe.name }}
+     </h4>
+   </div>
+
+   <div class="panel-body">
+     <p class="small">Author: {{ recipe.author.username }}</p>
+     <p class="small">Created: {{ recipe.date }}</p>
+     <p class="small">Edited: {{ recipe.date_edited }}</p>
+     <h5>Ingredients</h5>
+     <p style="white-space: pre-wrap;">{{ recipe.ingredients }}</p>
+     <h5>Instructions</h5>
+     <p style="white-space: pre-wrap;">{{ recipe.instructions }}</p>
+     {% if recipe.sources %}
+     <h5>Sources</h5>
+     <p id="sources" style="white-space: pre-wrap;">{{ recipe.sources }}</p>
+     {% endif %}
+
+    {% if current_user.id == recipe.author_id %}
+    <div class="btn-group pull-right">
+      <a class="btn btn-default" href="{{ url_for('edit', id=recipe.id)}}" role="button">Edit</a>
+    </div>
+    {% endif %}
+
+    </div>
+  </div>
+</section>
+
+
+{% endblock %}

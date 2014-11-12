@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+
+<section id="categories">
+  <div class="panel-group" id="accordion">
+    <div class="panel panel-default" id="panel1">
+      <div class="panel-heading">
+        <h4 class="panel-title" data-toggle="collapse" data-target="#collapse-categories" style="cursor:pointer;">
+            Categories
+        </h4>
+      </div>
+      <div id="collapse-categories" class="panel-collapse collapse">
+        <div class="panel-body">
+          test
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="latest-recipes">
+  <div class="container container-md-height">
+    <div class="row row-md-height">
+      {% block recipes %}
+      {% for recipe in recipes %}
+      <div class="col-md-4 col-md-height">
+        <h2><a href="{{ url_for('recipe', id=recipe.id) }}">{{ recipe.name }}</a></h2>
+        <small>Added: {{ recipe.get_date_pretty() }}</small>
+        <h5>Ingredients</h5>
+        <p style="white-space: pre-wrap;">{{ recipe.ingredients }}</p>
+        <h5>Instructions</h5>
+        <p style="white-space: pre-wrap;">{{ recipe.instructions }}</p>
+      </div>
+      {% endfor %}
+      {% endblock recipes %}
+    </div>
+  </div>
+</section>
+
+{% endblock content %}
