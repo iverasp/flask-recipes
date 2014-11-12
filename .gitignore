@@ -4,7 +4,7 @@
 config.py
 
 ### db ###
-app.db
+app.db*
 
 ### vim ###
 [._]*.s[a-w][a-z]
