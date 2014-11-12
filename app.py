@@ -149,7 +149,7 @@ def adduser():
         return redirect(url_for('index'))
     user = User(
         username='iverasp',
-        password='sjovo67'
+        password='lolcats'
     )
 
     db.session.add(user)
