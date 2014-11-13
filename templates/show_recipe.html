@@ -30,6 +30,10 @@ $(window).on('load', function () {
      <h5>Sources</h5>
      <p id="sources" style="white-space: pre-wrap;">{{ recipe.sources }}</p>
      {% endif %}
+     <h5>Categories</h5>
+     {% for cat in recipe.categories %}
+     <p>{{ cat.name }}</p>
+     {% endfor %}
 
     {% if current_user.id == recipe.author_id %}
     <div class="btn-group pull-right">

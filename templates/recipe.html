@@ -10,15 +10,15 @@
 <script>
 
 $(window).on('load', function () {
-  console.log('{{categories|tojson }}');
+  console.log([] + '{{all_cats|tojson }}');
   $('#tokenfield').tokenfield({
     autocomplete: {
-      source: {{categories|tojson }},
+      source: {% if all_cats %} {{all_cats|tojson }} {% else %} [] {% endif %},
       delay: 100
     },
     showAutocompleteOnFocus: true
   })
-  $('#tokenfield').values = '{{categories|tojson }}';
+  //$('#tokenfield').val('lol');
 });
 
 </script>
@@ -76,7 +76,7 @@ $(window).on('load', function () {
         </div>
         <div class="form-group">
           <label for="categories">Categories</label>
-          <input name="categories" type="text" class="form-control" id="tokenfield" value="" />
+          <input name="categories" type="text" class="form-control" id="tokenfield" value="{{ recipe_cats }}"/>
         </div>
         <div class="form-group">
           <button type="submit" class="btn btn-default pull-right">Submit</button>

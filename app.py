@@ -44,16 +44,17 @@ def recipe(id):
     #recipe = Recipe.query.join(User.recipes).filter(Recipe.id==id).first()
     #recipe = db.session.query(User.id).join(User.recipes)
     recipe = Recipe.query.filter_by(id=id).first()
-    pprint (vars(recipe))
-    print recipe.author
-    logout_form = LogoutForm()
+    #pprint (vars(recipe))
+    #print recipe.author
     if not recipe:
         flash('Recipe not found')
         return redirect(url_for('index'))
-
+    logout_form = LogoutForm()
+    recipe_cats = [i.name for i in recipe.categories.all()]
     return render_template(
         'show_recipe.html',
         recipe=recipe,
+        recipe_cats=recipe_cats,
         logout_form=logout_form
     )
 
@@ -79,6 +80,10 @@ def login():
 def add_recipe():
     recipe_form = RecipeForm()
     logout_form = LogoutForm()
+
+    all_cats_query = Category.query.all()
+    all_cats = [i.name for i in all_cats_query]
+    recipe_cats = [i.name for i in recipe.categories.all()]
     if recipe_form.validate_on_submit():
         recipe = Recipe(
             name=recipe_form.name.data,
@@ -95,50 +100,97 @@ def add_recipe():
         'recipe.html',
         recipe_form=recipe_form,
         logout_form=logout_form,
-        categories=Category.query.all()
+        all_cats=all_cats,
+        recipe_cats=','.join(map(str, recipe_cats)),
+        edit=False
     )
+
+@app.route('/add')
+@login_required
+def add():
+    return redirect(url_for('edit', id='new'))
 
 @app.route('/edit/<id>', methods=['GET', 'POST'])
 @login_required
 def edit(id):
-    recipe = Recipe.query.filter_by(id=id).first()
-    if not recipe or recipe.author_id is not current_user.id:
-        flash('Recipe not found')
-        return redirect(url_for('index'))
+    if id == 'new':
+        edit = False
+        recipe = True
+        recipe_form = RecipeForm()
+    else:
+        edit = True
+        recipe = Recipe.query.filter_by(id=id).first()
+        recipe_form = RecipeForm(obj=recipe)
+    #if not id == "new" or not recipe or recipe.author_id is not current_user.id:
+    #    flash('Recipe not found')
+    #    return redirect(url_for('index'))
     logout_form = LogoutForm()
-    recipe_form = RecipeForm(obj=recipe)
 
-    categories_query = Category.query.all()
-    categories = [i.name for i in categories_query]
-    print "cat", categories
+    all_cats_query = Category.query.all()
+    all_cats = [i.name for i in all_cats_query]
+    if id == 'new':
+        recipe_cats = []
+    else:
+        recipe_cats = [i.name for i in recipe.categories.all()]
+    print "all_cats", all_cats
+    print "recipe_cats", recipe_cats
 
-    if recipe_form.validate_on_submit():
+    if recipe_form.validate_on_submit() and not id == 'new':
         recipe.name = recipe_form.name.data
         recipe.date_edited = datetime.now()
         recipe.ingredients = recipe_form.ingredients.data
         recipe.instructions = recipe_form.instructions.data
         recipe.sources = recipe_form.sources.data
-        form_categories = str(recipe_form.categories.data).split(',')
-        for cat in form_categories:
-            if cat not in categories:
-                print "updating cateogires"
-                new_category = Category(
-                    name=form_categories[-1],
-                    recipes=[recipe]
-                    )
-                db.session.add(new_category)
-                db.session.commit()
-        else: print "categories match"
-        db.session.commit()
+        form_cats = str(recipe_form.categories.data).split(',')
+        update_categories(recipe, all_cats, recipe_cats, form_cats)
         flash('Recipe saved')
+        return redirect(url_for('recipe', id=recipe.id))
+    if recipe_form.validate_on_submit() and id == 'new':
+        recipe = Recipe(
+            name=recipe_form.name.data,
+            author=current_user,
+            ingredients=recipe_form.ingredients.data,
+            instructions=recipe_form.instructions.data,
+            sources=recipe_form.sources.data
+        )
+        db.session.add(recipe)
+        form_cats = str(recipe_form.categories.data).split(',')
+        update_categories(recipe, all_cats, recipe_cats, form_cats)
+        flash('Recipe added')
         return redirect(url_for('recipe', id=recipe.id))
     return render_template(
         'recipe.html',
         recipe_form=recipe_form,
         logout_form=logout_form,
-        categories=categories,
-        edit=True
+        all_cats=all_cats,
+        recipe_cats=','.join(map(str, recipe_cats)),
+        edit=edit
     )
+
+def update_categories(recipe, all_cats, old_cats, new_cats):
+    print "called update_categories"
+    print "old_cats", old_cats
+    print "new_cats", new_cats
+    pos_diff = list(set(new_cats) - set(old_cats))
+    neg_diff = list(set(old_cats) - set(new_cats))
+    print "pos_diff", pos_diff
+    print "neg_diff", neg_diff
+    for p in pos_diff:
+        if p is not "": #this needs better fix!
+            if p not in all_cats:
+                new_cat = Category(
+                    name=p,
+                    recipes=[recipe]
+                    )
+                db.session.add(new_cat)
+            else:
+                new_cat = Category.query.filter_by(name=p).first()
+                recipe.categories.append(new_cat)
+
+    for n in neg_diff:
+        del_cat = Category.query.filter_by(name=n).first()
+        recipe.categories.remove(del_cat)
+    db.session.commit()
 
 @app.route('/adduser')
 def adduser():
