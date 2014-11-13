@@ -71,6 +71,7 @@ class Recipe(db.Model):
         return unicode(str(self.date.year) + '-' + str(self.date.month) + '-' + str(self.date.day))
 
 class Comment(db.Model):
+    __tablename__ = 'comment'
     id = db.Column(db.Integer, primary_key=True)
     comment = db.Column(db.String, nullable=False)
     date = db.Column(db.DateTime, default=datetime.now)
