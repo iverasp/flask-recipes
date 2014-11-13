@@ -18,8 +18,8 @@ class RecipeForm(Form):
     sources = TextAreaField('instructions')
     categories = TextAreaField('categories')
 
-class AddRecipeCommentForm(Form):
-    pass
+class CommentForm(Form):
+    comment = TextAreaField('comment', validators=[DataRequired()])
 
 class LogoutForm(Form):
     pass

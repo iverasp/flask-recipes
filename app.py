@@ -36,23 +36,40 @@ def index():
         'index.html',
         user=current_user,
         recipes=Recipe.query.order_by(Recipe.date.desc()).all(),
+        categories=Category.query.all(),
         logout_form=logout_form
     )
 
-@app.route('/recipe/<id>')
+@app.route('/recipe/<id>', methods=['GET', 'POST'])
 def recipe(id):
-    #recipe = Recipe.query.join(User.recipes).filter(Recipe.id==id).first()
-    #recipe = db.session.query(User.id).join(User.recipes)
     recipe = Recipe.query.filter_by(id=id).first()
-    #pprint (vars(recipe))
-    #print recipe.author
     if not recipe:
         flash('Recipe not found')
         return redirect(url_for('index'))
     logout_form = LogoutForm()
     recipe_cats = [i.name for i in recipe.categories.all()]
+    if current_user.is_authenticated():
+        comment_form = CommentForm()
+        if comment_form.validate_on_submit() and current_user.is_authenticated():
+            comment = Comment(
+                comment=comment_form.comment.data,
+                author=current_user,
+                recipe=recipe
+            )
+            db.session.add(comment)
+            db.session.commit()
+            return redirect(url_for('recipe', id=recipe.id))
+        return render_template(
+            'show_recipe.html',
+            title=recipe.name + ' by ' + recipe.author.username,
+            recipe=recipe,
+            recipe_cats=recipe_cats,
+            logout_form=logout_form,
+            comment_form=comment_form
+        )
     return render_template(
         'show_recipe.html',
+        title=recipe.name + ' by ' + recipe.author.username,
         recipe=recipe,
         recipe_cats=recipe_cats,
         logout_form=logout_form
@@ -121,9 +138,10 @@ def edit(id):
         edit = True
         recipe = Recipe.query.filter_by(id=id).first()
         recipe_form = RecipeForm(obj=recipe)
-    #if not id == "new" or not recipe or recipe.author_id is not current_user.id:
-    #    flash('Recipe not found')
-    #    return redirect(url_for('index'))
+    if edit:
+        if not recipe or recipe.author_id is not current_user.id:
+            flash('Recipe not found')
+            return redirect(url_for('index'))
     logout_form = LogoutForm()
 
     all_cats_query = Category.query.all()
@@ -195,12 +213,12 @@ def update_categories(recipe, all_cats, old_cats, new_cats):
 @app.route('/adduser')
 def adduser():
     if User.query.filter_by(
-        username='iverasp'
+        username='iverasp2'
     ).first():
         flash('user already exists')
         return redirect(url_for('index'))
     user = User(
-        username='iverasp',
+        username='iverasp2',
         password='lolcats'
     )
 

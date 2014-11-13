@@ -66,11 +66,21 @@ class Recipe(db.Model):
     ingredients = db.Column(db.PickleType)
     instructions = db.Column(db.String)
     sources = db.Column(db.String)
-    comments = db.Column(db.String)
 
     def get_date_pretty(self):
-        #return unicode(self.date.replace(hour=0, minute=0, second=0, microsecond=0))
         return unicode(str(self.date.year) + '-' + str(self.date.month) + '-' + str(self.date.day))
 
-#class Comments(db.Model):
-    #pass
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    comment = db.Column(db.String, nullable=False)
+    date = db.Column(db.DateTime, default=datetime.now)
+    date_edited = db.Column(db.DateTime, default=datetime.now)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    author = db.relationship('User',
+                                backref=db.backref('comment',lazy='dynamic'))
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'))
+    recipe = db.relationship('Recipe',
+                                backref=db.backref('comment', lazy='dynamic'))
+
+    def get_date_pretty(self):
+        return unicode(str(self.date.year) + '-' + str(self.date.month) + '-' + str(self.date.day))

@@ -11,7 +11,9 @@
       </div>
       <div id="collapse-categories" class="panel-collapse collapse">
         <div class="panel-body">
-          test
+          {% for category in categories %}
+          <p>{{ category.name }}</p>
+          {% endfor %}
         </div>
       </div>
     </div>

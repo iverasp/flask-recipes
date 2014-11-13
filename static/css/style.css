@@ -11,3 +11,19 @@ body {
 .panel-heading a.collapsed:after {
     content: "\e080";
 }
+
+@media print {
+
+  body {
+    padding-top: 0px;
+  }
+
+  @page {
+    margin: 0.5cm;
+  }
+
+  .form-control, .form-group, .btn-group {
+    display: none;
+  }
+
+}
