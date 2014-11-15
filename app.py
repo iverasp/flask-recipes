@@ -18,8 +18,10 @@ login_manager.login_view = 'login'
 
 @app.before_first_request
 def initialize_database():
-    print "creating db"
-    db.create_all()
+    if app.debug:
+        print "creating db"
+        db.create_all()
+    app.jinja_env.globals.update(logout_form=LogoutForm())
 
 @login_manager.user_loader
 def load_user(id):
@@ -31,26 +33,23 @@ def before_request():
 
 @app.route('/')
 def index():
-    logout_form = LogoutForm()
     return render_template(
         'index.html',
-        user=current_user,
         recipes=Recipe.query.order_by(Recipe.date.desc()).all(),
-        categories=Category.query.all(),
-        logout_form=logout_form
+        categories=Category.query.all()
     )
 
 @app.route('/recipe/<id>', methods=['GET', 'POST'])
 def recipe(id):
     recipe = Recipe.query.filter_by(id=id).first()
     if not recipe:
-        flash('Recipe not found')
+        flash('Recipe not found', 'danger')
         return redirect(url_for('index'))
-    logout_form = LogoutForm()
     recipe_cats = [i.name for i in recipe.categories.all()]
     if current_user.is_authenticated():
         comment_form = CommentForm()
-        if comment_form.validate_on_submit() and current_user.is_authenticated():
+        if comment_form.validate_on_submit() \
+        and current_user.is_authenticated():
             comment = Comment(
                 comment=comment_form.comment.data,
                 author=current_user,
@@ -64,7 +63,6 @@ def recipe(id):
             title=recipe.name + ' by ' + recipe.author.username,
             recipe=recipe,
             recipe_cats=recipe_cats,
-            logout_form=logout_form,
             comment_form=comment_form
         )
     return render_template(
@@ -84,7 +82,7 @@ def login():
         ).first()
         if registered_user is None \
             or not registered_user.check_password(login_form.password.data):
-            flash('Wrong phone number or password')
+            flash('Wrong phone number or password', 'danger')
             return redirect(url_for('login'))
         login_user(registered_user, remember=login_form.remember_me.data)
         return redirect(url_for('index'))
@@ -96,7 +94,6 @@ def login():
 @login_required
 def add_recipe():
     recipe_form = RecipeForm()
-    logout_form = LogoutForm()
 
     all_cats_query = Category.query.all()
     all_cats = [i.name for i in all_cats_query]
@@ -116,7 +113,6 @@ def add_recipe():
     return render_template(
         'recipe.html',
         recipe_form=recipe_form,
-        logout_form=logout_form,
         all_cats=all_cats,
         recipe_cats=','.join(map(str, recipe_cats)),
         edit=False
@@ -140,9 +136,8 @@ def edit(id):
         recipe_form = RecipeForm(obj=recipe)
     if edit:
         if not recipe or recipe.author_id is not current_user.id:
-            flash('Recipe not found')
+            flash('Recipe not found', 'danger')
             return redirect(url_for('index'))
-    logout_form = LogoutForm()
 
     all_cats_query = Category.query.all()
     all_cats = [i.name for i in all_cats_query]
@@ -161,7 +156,7 @@ def edit(id):
         recipe.sources = recipe_form.sources.data
         form_cats = str(recipe_form.categories.data).split(',')
         update_categories(recipe, all_cats, recipe_cats, form_cats)
-        flash('Recipe saved')
+        flash('Recipe saved', 'success')
         return redirect(url_for('recipe', id=recipe.id))
     if recipe_form.validate_on_submit() and id == 'new':
         recipe = Recipe(
@@ -174,12 +169,11 @@ def edit(id):
         db.session.add(recipe)
         form_cats = str(recipe_form.categories.data).split(',')
         update_categories(recipe, all_cats, recipe_cats, form_cats)
-        flash('Recipe added')
+        flash('Recipe added', 'success')
         return redirect(url_for('recipe', id=recipe.id))
     return render_template(
         'recipe.html',
         recipe_form=recipe_form,
-        logout_form=logout_form,
         all_cats=all_cats,
         recipe_cats=','.join(map(str, recipe_cats)),
         edit=edit
@@ -230,17 +224,14 @@ def adduser():
 @app.route('/logout', methods=['POST'])
 @login_required
 def logout():
-    logout_form = LogoutForm()
     if logout_form.validate_on_submit():
-        #session.clear()
         logout_user()
         return redirect(url_for('index'))
     return redirect(url_for('index'))
 
 @app.errorhandler(404)
 def page_not_found(e):
-    logout_form = LogoutForm()
-    return render_template('404.html', logout_form=logout_form), 404
+    return render_template('404.html'), 404
 
 if __name__=='__main__':
     app.run(debug=True)

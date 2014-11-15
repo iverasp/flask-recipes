@@ -36,20 +36,24 @@ $(window).on('load', function () {
      {% endfor %}
 
     {% if current_user.id == recipe.author_id %}
-    <div class="btn-group pull-right clearfix">
-      <a class="btn btn-default" href="{{ url_for('edit', id=recipe.id)}}" role="button">Edit</a>
+    <div class="btn-group clearfix">
+      <a class="btn btn-default pull-right" href="{{ url_for('edit', id=recipe.id)}}" role="button">Edit</a>
     </div>
     {% endif %}
 
     {% for comment in recipe.comment %}
-    <div class="">
-      {{ comment.comment }}
-      {{ comment.author.username }}
-      {{ comment.get_date_pretty() }}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        Comment by {{comment.author.username}} on {{comment.date}}
+      </div>
+      <div class="panel-body">
+        {{ comment.comment }}
+      </div>
     </div>
     {% endfor %}
 
     {% if current_user.is_authenticated() %}
+
     <form role="form" method='post' action=''>
       {{ comment_form.hidden_tag() }}
       <div class="form-group">

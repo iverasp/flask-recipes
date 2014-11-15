@@ -3,9 +3,6 @@ from wtforms import StringField, BooleanField, SelectMultipleField, TextAreaFiel
 from wtforms.validators import DataRequired
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 
-#def enabled_categories():
-    #return Category.query.all()
-
 class LoginForm(Form):
     username = StringField('username', validators=[DataRequired()])
     password = StringField('password', validators=[DataRequired()])
@@ -15,7 +12,7 @@ class RecipeForm(Form):
     name = StringField('name', validators=[DataRequired()])
     ingredients = TextAreaField('ingredients', validators=[DataRequired()])
     instructions = TextAreaField('instructions', validators=[DataRequired()])
-    sources = TextAreaField('instructions')
+    sources = TextAreaField('sources')
     categories = TextAreaField('categories')
 
 class CommentForm(Form):
