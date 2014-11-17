@@ -1,2 +1,4 @@
 flask-login
 flask-wtf
+flask-markdown
+flask-wooshalchemy

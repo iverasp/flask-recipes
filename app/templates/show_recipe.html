@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block head %}
+<script src="/static/js/jquery.linkify.min.js"></script>
+<script src="/static/js/bootbox.min.js"></script>
+<script>
+$(window).on('load', function () {
+  $('#sources').linkify();
+});
+
+var show_delete_comment_dialog = function(id) {
+  bootbox.dialog({
+    message: 'Do you really want to delete this comment?',
+    title: 'Confirm',
+    buttons: {
+      success: {
+        label: 'Yes',
+        className: 'btn-primary',
+        callback: function() {
+          delete_comment(id);
+        }
+      },
+      danger: {
+        label: 'No',
+        className: 'btn-danger'
+      }
+    }
+  });
+};
+var show_delete_recipe_dialog = function(id) {
+  bootbox.dialog({
+    message: 'Do you really want to delete this recipe?',
+    title: 'Confirm',
+    buttons: {
+      success: {
+        label: 'Yes',
+        className: 'btn-primary',
+        callback: function() {
+          delete_recipe(id);
+        }
+      },
+      danger: {
+        label: 'No',
+        className: 'btn-danger'
+      }
+    }
+  });
+};
+var delete_comment = function(id) {
+  $.ajax({
+    type: 'POST',
+    url: '/delete_comment',
+    data: { 'csrf_token': '{{ csrf_token() }}', 'id': id },
+    success: function() { $('#comment-' + id).remove(); },
+    error: function() {
+      // display alert about error
+      console.log('error');
+    }
+  });
+};
+var delete_recipe = function(id) {
+  $.ajax({
+    type: 'POST',
+    url: '/delete_recipe',
+    data: { 'csrf_token': '{{ csrf_token() }}', 'id': id },
+    success: function() {
+      window.location = '{{ url_for('index') }}'
+    },
+    error: function() {
+      // display alert about error
+      console.log('error');
+    }
+  });
+};
+
+</script>
+{% endblock head %}
+
+{% block content %}
+
+<section id="add_recipe">
+  <div class="panel panel-default">
+   <div class="panel-heading">
+     <h4 class="panel-title">
+       {{ recipe.name }}
+     </h4>
+   </div>
+
+   <div class="panel-body">
+     <h5><strong>Tags</strong></h5>
+     {% for tags in recipe.tags %}
+     <p>{{ tags.name }}</p>
+     {% endfor %}
+     <p class="small pull-right">
+       <strong>Created:</strong> {{ recipe.get_date_pretty() }}</p>
+     <p class="small">
+       <strong>Author:</strong> {{ recipe.author.username }}</p>
+
+     {% with date_edited = recipe.get_date_edited_pretty() %}
+     {% if not date_edited == recipe.get_date_pretty() %}
+     <p class="small"><strong>Edited:
+      </strong> {{ recipe.get_date_edited_pretty() }}</p>
+     {% endif %}
+     {% endwith %}
+     <h5><i>Ingredients</i></h5>
+     {{ recipe.ingredients | markdown }}
+     <h5><i>Instructions</i></h5>
+     {{ recipe.instructions | markdown }}
+     {% if recipe.sources %}
+     <h5><i>Sources</i></h5>
+     <p id="sources" style="white-space: pre-wrap;">{{ recipe.sources }}</p>
+     {% endif %}
+     {% if recipe.has_children() %}
+     <h5><i>Serves with</i></h5>
+     <ul>
+     {% for rec in recipe.recipe_children %}
+     <li><a href="{{ url_for('recipe', id=rec.id) }}">{{ rec.name }}</a></li>
+     {% endfor %}
+     </ul>
+     {% endif %}
+     {% if recipe.has_parents() %}
+     <h5><i>Mentioned in</i></h5>
+     <ul>
+     {% for rec in recipe.recipe_parents %}
+     <li><a href="{{ url_for('recipe', id=rec.id) }}">{{ rec.name }}</a></li>
+     {% endfor %}
+     </ul>
+     {% endif %}
+
+
+    {% if current_user.id == recipe.author_id %}
+    <div class="clearfix">
+      <div class="pull-right">
+
+    <div class="btn-group">
+      <a class="btn btn-sm btn-info"
+      href="{{ url_for('edit', id=recipe.id)}}" role="button">Edit</a>
+    </div>
+
+    <div class="btn-group">
+      <a class="btn btn-sm btn-danger"
+      href="javascript:{};" onclick="show_delete_recipe_dialog({{ recipe.id }})"
+      role="button">Delete</a>
+    </div>
+    </div>
+    </div>
+    {% endif %}
+
+    <hr></hr>
+
+    {% for comment in recipe.comment %}
+    <div id="comment-{{comment.id}}">
+      <p><strong>Comment by {{comment.author.username}}</strong>
+        on {{comment.get_date_pretty()}}
+        {% if comment.author == current_user %}
+        <button class="btn btn-xs pull-right"
+        onclick="show_delete_comment_dialog({{comment.id}})">Delete</button>
+        {% endif %}
+      </p>
+      <p style="white-space: pre-wrap;">{{ comment.comment }}</p>
+      <hr></hr>
+    </div>
+    {% endfor %}
+
+    {% if current_user.is_authenticated() %}
+
+    <form role="form" method='post' action=''>
+      {{ comment_form.hidden_tag() }}
+      <div class="form-group">
+        <label for "comment">New comment</label>
+        {{ comment_form.comment(type="text",
+                                        class="form-control",
+                                        rows="4",
+                                        placeholder="Comment",
+                                        style="resize:vertical",
+                                        required=True) }}
+      </div>
+      <div class="form-group">
+        <button type="submit" class="btn btn-sm btn-default pull-right">
+          Submit</button>
+      </div>
+    </form>
+    {% endif %}
+
+    </div>
+  </div>
+</section>
+
+
+{% endblock %}
