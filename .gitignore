@@ -6,6 +6,9 @@ config.py
 ### db ###
 app.db*
 
+### whooshalchemy index ###
+search.db*
+
 ### vim ###
 [._]*.s[a-w][a-z]
 [._]s[a-w][a-z]
