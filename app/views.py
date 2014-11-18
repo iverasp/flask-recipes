@@ -25,7 +25,7 @@ def before_request():
 def index():
     return render_template(
         'index.html',
-        tags=Tag.query.all()
+        tags=Tag.query.order_by(Tag.name.asc()).all()
     )
 
 @app.route('/browse')
@@ -210,9 +210,9 @@ def edit(id):
         'recipe.html',
         recipe_form=recipe_form,
         all_tags=all_tags,
-        recipe_tags=array_to_csv(recipe_tags),
+        recipe_tags=array_to_csv(recipe_tags).sort(),
         all_recipes=all_recipes,
-        recipe_recipes=array_to_csv(recipe_recipes),
+        recipe_recipes=array_to_csv(recipe_recipes).sort(),
         edit=edit
     )
 
