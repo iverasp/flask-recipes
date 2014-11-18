@@ -40,7 +40,7 @@ var update_frontpage = function(page, tags) {
         html += '<h2><a href="/recipe/' + value.id + '">' + value.name + '</a></h2>'
         html += '<small>Added:' + value.date + '</small>'
         html += '<h5>Ingredients</h5>'
-        html += '<p>' + value.ingredients + '</p>'
+        html += '<p style="white-space:pre-wrap;">' + value.ingredients + '</p>'
         html += '<h5>Instructions</h5>'
         html += '<p style="white-space: pre-wrap;">' + value.instructions + '</p>'
         $('<div></div>')
