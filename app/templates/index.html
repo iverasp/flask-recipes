@@ -1,4 +1,11 @@
 {% extends "base.html" %}
+
+{% block head %}
+
+<script src="/static/js/index.js"></script>
+
+{% endblock head %}
+
 {% block content %}
 
 <section id="categories">
@@ -6,37 +13,49 @@
     <div class="panel panel-default" id="panel1">
       <div class="panel-heading">
         <h4 class="panel-title" data-toggle="collapse" data-target="#collapse-categories" style="cursor:pointer;">
-            Categories
+            Tags
         </h4>
       </div>
       <div id="collapse-categories" class="panel-collapse collapse">
         <div class="panel-body">
-          {% for category in categories %}
-          <p>{{ category.name }}</p>
-          {% endfor %}
+          <div data-toggle="buttons" id="tag-group">
+            {% for tag in tags %}
+            <label class="btn btn-default">
+              <input type="checkbox" id="{{ tag.name }}">{{ tag.name }}
+            </label>
+            {% endfor %}
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<section id="latest-recipes">
-  <div class="container container-md-height">
-    <div class="row row-md-height">
-      {% block recipes %}
-      {% for recipe in recipes %}
-      <div class="col-md-4 col-md-height">
-        <h2><a href="{{ url_for('recipe', id=recipe.id) }}">{{ recipe.name }}</a></h2>
-        <small>Added: {{ recipe.get_date_pretty() }}</small>
-        <h5>Ingredients</h5>
-        <p style="white-space: pre-wrap;">{{ recipe.ingredients | markdown }}</p>
-        <h5>Instructions</h5>
-        <p style="white-space: pre-wrap;">{{ recipe.instructions | markdown }}</p>
+<section id="recipes-section">
+
+  <div class="clearfix">
+    Found <span style="font-weight: bold;" id="recipe-count"></span> recipes
+    <div class="pull-right">
+
+      <div class="btn-group" id="prev-button">
+        <a class="btn btn-sm btn-primary"
+          href="javascript:{};" onclick="update_page(-1)"
+          role="button">Previous</a>
       </div>
-      {% endfor %}
-      {% endblock recipes %}
+
+      <div class="btn-group" id="next-button">
+        <a class="btn btn-sm btn-primary"
+          href="javascript:{};" onclick="update_page(1)"
+          role="button">Next</a>
+      </div>
     </div>
   </div>
+
+  <div class="container container-md-height">
+    <div class="row row-md-height" id="recipes-group">
+    </div>
+  </div>
+
 </section>
 
 {% endblock content %}

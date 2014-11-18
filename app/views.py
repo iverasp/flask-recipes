@@ -12,7 +12,6 @@ def initialize_database():
     if app.debug:
         print "creating db"
         db.create_all()
-    #app.jinja_env.globals.update(logout_form=LogoutForm())
 
 @login_manager.user_loader
 def load_user(id):
@@ -21,15 +20,44 @@ def load_user(id):
 @app.before_request
 def before_request():
     user = current_user
-    #logout_form = LogoutForm()
 
 @app.route('/')
 def index():
     return render_template(
         'index.html',
-        recipes=Recipe.query.order_by(Recipe.date.desc()).all(),
         tags=Tag.query.all()
     )
+
+@app.route('/browse')
+def browse():
+    return render_template(
+        'browse.html',
+        recipes=Recipe.query.order_by(Recipe.name.desc()).all()
+    )
+
+@app.route('/api/recipe')
+def api_recipe():
+    # will throw error when request arg is not number...
+    start = 0 if not request.args.get('start') else int(request.args.get('start'))
+    end = 10 if not request.args.get('end') else int(request.args.get('end'))
+    tags = set(request.args.getlist('tags'))
+
+    # very hacky implementation of search based on tags. give up on whooshalchemy?
+    if len(tags) > 0:
+        result = set()
+        recipes = Recipe.query.all()
+        for recipe in recipes:
+            recipe_tags = set([i.name for i in recipe.tags.all()])
+            if len(tags - recipe_tags) == 0:
+                result.add(recipe)
+        result = list(result)
+        result.sort(key=lambda x: x.date, reverse=True)
+        return jsonify(result = [i.serialize for i in result][start:end],
+            length = len(result))
+
+    return jsonify(result = [i.serialize for i in
+        Recipe.query.order_by(Recipe.date.desc())[start:end]],
+            length = db.session.query(Recipe.id).count())
 
 @app.route('/search', methods=['POST'])
 def search():
@@ -38,11 +66,11 @@ def search():
         # best way of doing this?
         # todo: figure out how join works with whoosh
 
-        result_cat = [i.serialize for i in
+        result_cat = [i.serialize_basic for i in
             db.session.query(Recipe).join(Tag.recipes)
             .filter(Tag.name.like('%'+search_form.query.data+'%')).all()]
 
-        result_free = [i.serialize for i in
+        result_free = [i.serialize_basic for i in
             Recipe.query.whoosh_search(search_form.query.data).all()
             if i.serialize not in result_cat]
 
@@ -72,15 +100,12 @@ def recipe(id):
         return render_template(
             'show_recipe.html',
             title=recipe.name + ' by ' + recipe.author.username,
-            recipe=recipe,
-            recipe_tags=recipe_tags,
-            comment_form=comment_form,
+            **locals()
         )
     return render_template(
         'show_recipe.html',
         title=recipe.name + ' by ' + recipe.author.username,
-        recipe=recipe,
-        recipe_tags=recipe_tags
+        **locals()
     )
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -99,34 +124,6 @@ def login():
     return render_template('login.html',
                             title='Log in',
                             login_form=login_form)
-
-@app.route('/add_recipe', methods=['GET', 'POST'])
-@login_required
-def add_recipe():
-    recipe_form = RecipeForm()
-
-    all_tags_query = Tag.query.all()
-    all_tags = [i.name for i in all_tags_query]
-    recipe_tags = [i.name for i in recipe.tags.all()]
-    if recipe_form.validate_on_submit():
-        recipe = Recipe(
-            name=recipe_form.name.data,
-            author=current_user,
-            ingredients=recipe_form.ingredients.data,
-            instructions=recipe_form.instructions.data,
-            sources=recipe_form.sources.data
-        )
-        db.session.add(recipe)
-        db.session.commit()
-        flash('Recipe added')
-        return redirect(url_for('recipe', id=recipe.id))
-    return render_template(
-        'recipe.html',
-        recipe_form=recipe_form,
-        all_tags=all_tags,
-        recipe_tags=','.join(map(str, recipe_tags)),
-        edit=False
-    )
 
 @app.route('/add')
 @login_required
@@ -152,16 +149,12 @@ def edit(id):
     all_tags_query = Tag.query.all()
     all_tags = [i.name for i in all_tags_query]
     all_recipes = [i.name for i in Recipe.query.all()]
-    print all_recipes
     if id == 'new':
         recipe_tags = []
         recipe_recipes = []
     else:
         recipe_tags = [i.name for i in recipe.tags.all()]
         recipe_recipes = [i.name for i in recipe.recipe_children.all()]
-        print recipe_tags
-    print "all_tags", all_tags
-    print "recipe_tags", recipe_tags
 
     if recipe_form.validate_on_submit() and not id == 'new':
         recipe.name = recipe_form.name.data
@@ -169,8 +162,8 @@ def edit(id):
         recipe.ingredients = recipe_form.ingredients.data
         recipe.instructions = recipe_form.instructions.data
         recipe.sources = recipe_form.sources.data
-        form_tags = [x.strip() for x in recipe_form.tags.data.split(',')]
-        form_recipes = [x.strip() for x in recipe_form.recipes.data.split(',')]
+        form_tags = csv_to_array(recipe_form.tags.data)
+        form_recipes = csv_to_array(recipe_form.recipes.data)
         update_tags(recipe, all_tags, recipe_tags, form_tags)
         update_recipe_recipes(recipe, all_recipes, recipe_recipes, form_recipes)
         db.session.commit()
@@ -185,8 +178,8 @@ def edit(id):
             sources=recipe_form.sources.data
         )
         db.session.add(recipe)
-        form_tags = [x.strip() for x in recipe_form.tags.data.split(',')]
-        form_recipes = [x.strip() for x in recipe_form.recipes.data.split(',')]
+        form_tags = csv_to_array(recipe_form.tags.data)
+        form_recipes = csv_to_array(recipe_form.recipes.data)
         update_tags(recipe, all_tags, recipe_tags, form_tags)
         update_recipe_recipes(recipe, all_recipes, recipe_recipes, form_recipes)
         db.session.commit()
@@ -196,20 +189,27 @@ def edit(id):
         'recipe.html',
         recipe_form=recipe_form,
         all_tags=all_tags,
-        recipe_tags=','.join(map(unicode, recipe_tags)),
+        recipe_tags=array_to_csv(recipe_tags),
         all_recipes=all_recipes,
-        recipe_recipes=','.join(map(unicode, recipe_recipes)),
+        recipe_recipes=array_to_csv(recipe_recipes),
         edit=edit
     )
+
+def csv_to_array(data):
+    if len(data) == 0: return []
+    return [x.strip() for x in data.split(',')]
+
+def array_to_csv(data):
+    if len(data) == 0: return ''
+    return ','.join(map(unicode, data))
+
 
 @app.route('/delete_recipe', methods=['POST'])
 @login_required
 def delete_recipe():
-    print 'called delete_recipe'
     delete_recipe_form = DeleteRecipeForm()
     if delete_recipe_form.validate_on_submit():
         recipe = Recipe.query.filter_by(id=delete_recipe_form.id.data).first()
-        print recipe
         if not recipe.author == current_user:
             flash('Something went wrong', 'warning')
             return redirect(url_for('index'))
@@ -223,7 +223,6 @@ def delete_recipe():
 @app.route('/delete_comment', methods=['POST'])
 @login_required
 def delete_comment():
-    print 'called delete_comment'
     delete_comment_form = DeleteCommentForm()
     if delete_comment_form.validate_on_submit():
         comment = Comment.query.filter_by(id=delete_comment_form.id.data).first()
@@ -235,45 +234,33 @@ def delete_comment():
     return 'lol'
 
 def update_tags(recipe, all_tags, old_tags, new_tags):
-    print "called update_tags"
-    print "old_tags", old_tags
-    print "new_tags", new_tags
     pos_diff = list(set(new_tags) - set(old_tags))
     neg_diff = list(set(old_tags) - set(new_tags))
-    print "pos_diff", pos_diff
-    print "neg_diff", neg_diff
     for p in pos_diff:
-        if p is not "": #this needs better fix!
-            if p not in all_tags:
-                new_cat = Tag(
-                    name=p,
-                    recipes=[recipe]
-                    )
-                db.session.add(new_cat)
-            else:
-                new_cat = Tag.query.filter_by(name=p).first()
-                recipe.tags.append(new_cat)
+        if p not in all_tags:
+            new_cat = Tag(
+                name=p,
+                recipes=[recipe]
+                )
+            db.session.add(new_cat)
+        else:
+            new_cat = Tag.query.filter_by(name=p).first()
+            recipe.tags.append(new_cat)
 
     for n in neg_diff:
         del_cat = Tag.query.filter_by(name=n).first()
         recipe.tags.remove(del_cat)
 
 def update_recipe_recipes(recipe, all_recipes, old_recipes, new_recipes):
-    print "called update_recipe_recipes"
-    print "old_recipes", old_recipes
-    print "new_recipes", new_recipes
     pos_diff = list(set(new_recipes) - set(old_recipes))
     neg_diff = list(set(old_recipes) - set(new_recipes))
-    print "pos_diff", pos_diff
-    print "neg_diff", neg_diff
     for p in pos_diff:
-        if p is not "": #this needs better fix!
-            if p not in all_recipes:
-                # alert user of error
-                pass
-            else:
-                new_recipe = Recipe.query.filter_by(name=p).first()
-                recipe.recipe_children.append(new_recipe)
+        if p not in all_recipes:
+            # alert user of error
+            pass
+        else:
+            new_recipe = Recipe.query.filter_by(name=p).first()
+            recipe.recipe_children.append(new_recipe)
 
     for n in neg_diff:
         del_recipe = Recipe.query.filter_by(name=n).first()
@@ -289,6 +276,9 @@ def adduser():
     user = User(
         username='iverasp',
         password='lolcats'
+    )
+    user.role = Role(
+        admin=True
     )
 
     db.session.add(user)

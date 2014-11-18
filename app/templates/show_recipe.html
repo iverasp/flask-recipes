@@ -88,13 +88,14 @@ var delete_recipe = function(id) {
    <div class="panel-body">
      <h5><strong>Tags</strong></h5>
      {% for tags in recipe.tags %}
-     <p>{{ tags.name }}</p>
+     <label class="btn btn-default btn-xs">{{ tags.name }}</label>
      {% endfor %}
+     <div class="clearfix">
      <p class="small pull-right">
        <strong>Created:</strong> {{ recipe.get_date_pretty() }}</p>
      <p class="small">
        <strong>Author:</strong> {{ recipe.author.username }}</p>
-
+     </div>
      {% with date_edited = recipe.get_date_edited_pretty() %}
      {% if not date_edited == recipe.get_date_pretty() %}
      <p class="small"><strong>Edited:
@@ -131,17 +132,17 @@ var delete_recipe = function(id) {
     <div class="clearfix">
       <div class="pull-right">
 
-    <div class="btn-group">
-      <a class="btn btn-sm btn-info"
-      href="{{ url_for('edit', id=recipe.id)}}" role="button">Edit</a>
-    </div>
+        <div class="btn-group">
+          <a class="btn btn-sm btn-info"
+            href="{{ url_for('edit', id=recipe.id)}}" role="button">Edit</a>
+        </div>
 
-    <div class="btn-group">
-      <a class="btn btn-sm btn-danger"
-      href="javascript:{};" onclick="show_delete_recipe_dialog({{ recipe.id }})"
-      role="button">Delete</a>
-    </div>
-    </div>
+        <div class="btn-group">
+          <a class="btn btn-sm btn-danger"
+            href="javascript:{};" onclick="show_delete_recipe_dialog({{ recipe.id }})"
+            role="button">Delete</a>
+        </div>
+      </div>
     </div>
     {% endif %}
 

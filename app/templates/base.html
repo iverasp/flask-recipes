@@ -21,7 +21,7 @@
       $('.suggestions').fadeOut(speed);
     })
     $('#search').on('input', function() {
-      $('.suggestions').empty();
+      $('.suggestions-list').empty();
       if ($('#search').val().length == 0) {
         $('.suggestions').fadeOut(speed);
         return;
@@ -61,7 +61,7 @@
             })
             .css('cursor', 'pointer')
             .html(item_values.name)
-            .appendTo('.suggestions');
+            .appendTo('.suggestions-list');
           })
           $('.suggestions').fadeIn(speed);
         });
@@ -92,6 +92,7 @@
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
             <li><a href="{{ url_for('add') }}">Add recipe</a></li>
+            <li><a href="{{ url_for('browse') }}">Browse all</a></li>
             {% if current_user.is_authenticated() %}
             <li>
               <a href="javascript:{}"
@@ -117,12 +118,18 @@
 
 
                 <input type="text" class="form-control"
-                autocomplete="off" placeholder="Search..." id="search">
+                autocomplete="off" id="search">
 
 
 
               </div>
-              <div class="suggestions"></div>
+              <div class="suggestions">
+                <div class="suggestions-header">
+                  <i>Search results</i>
+                </div>
+                <div class="suggestions-list">
+              </div>
+              </div>
           </div>
         </div>
       </div>
