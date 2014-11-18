@@ -94,10 +94,11 @@
             <li><a href="{{ url_for('add') }}">Add recipe</a></li>
             <li><a href="{{ url_for('browse') }}">Browse all</a></li>
             {% if current_user.is_authenticated() %}
+            <li><a href="{{ url_for('account') }}">Account</a></li>
             <li>
               <a href="javascript:{}"
               onclick="document.getElementById('logout').submit(); return false;">
-              Logout {{ current_user.username }}</a>
+              Logout</a>
               <form method="post" action="/logout" id="logout">
                 <div style="display:none;">
                   <input id="csrf_token" name="csrf_token" type="hidden"

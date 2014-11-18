@@ -1,6 +1,7 @@
 from flask.ext.wtf import Form, RecaptchaField
-from wtforms import StringField, BooleanField, SelectMultipleField, TextAreaField
-from wtforms.validators import DataRequired
+from wtforms import StringField, BooleanField, SelectMultipleField, \
+    TextAreaField, PasswordField
+from wtforms.validators import DataRequired, Length, Required, EqualTo
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 
 class LoginForm(Form):
@@ -31,3 +32,11 @@ class SearchForm(Form):
 
 class DeleteRecipeForm(Form):
     id = StringField('id', validators=[DataRequired()])
+
+class UpdatePasswordForm(Form):
+    password = PasswordField('Password', validators=[
+        Length(min=6),
+        Required(),
+        EqualTo('confirm', message='Passwords must match')
+    ])
+    confirm = PasswordField('Repeat password')

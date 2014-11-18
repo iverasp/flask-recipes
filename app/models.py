@@ -82,7 +82,7 @@ class Recipe(db.Model):
     date_edited = db.Column(db.DateTime, default=datetime.now)
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = db.relationship('User',
-        backref=db.backref('recipe',lazy='dynamic'))
+        backref=db.backref('recipes',lazy='dynamic'))
     ingredients = db.Column(db.String)
     instructions = db.Column(db.String)
     sources = db.Column(db.String)

@@ -32,8 +32,29 @@ def index():
 def browse():
     return render_template(
         'browse.html',
-        recipes=Recipe.query.order_by(Recipe.name.desc()).all()
+        recipes=Recipe.query.order_by(Recipe.name.asc()).all()
     )
+
+@app.route('/account', methods=['GET', 'POST'])
+@login_required
+def account():
+    update_password_form = UpdatePasswordForm()
+    return render_template(
+        'account.html',
+        **locals()
+    )
+
+@app.route('/update_password', methods=['POST'])
+def update_password():
+    update_password_form = UpdatePasswordForm()
+    if update_password_form.validate_on_submit():
+        current_user.set_password(update_password_form.password.data)
+        db.session.commit()
+        flash('Password updated', 'info')
+        return redirect(url_for('account'))
+    else:
+        #flash(update_password_form.messages)
+        return redirect(url_for('account'))
 
 @app.route('/api/recipe')
 def api_recipe():
