@@ -23,6 +23,7 @@ def before_request():
 
 @app.route('/')
 def index():
+    # test webhooks
     return render_template(
         'index.html',
         title='Bon apetit',
