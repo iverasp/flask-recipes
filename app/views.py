@@ -22,6 +22,7 @@ def before_request():
     user = current_user
 
 @app.route('/')
+@login_required
 def index():
     # test webhooks 2
     return render_template(
