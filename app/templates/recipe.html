@@ -12,7 +12,7 @@
 $(window).on('load', function () {
   $('#tokenfield_tags').tokenfield({
     autocomplete: {
-      source: {% if all_cats %} {{all_tags|tojson }} {% else %} [] {% endif %},
+      source: {% if all_tags %} {{all_tags|tojson }} {% else %} [] {% endif %},
       delay: 100
     },
     showAutocompleteOnFocus: true

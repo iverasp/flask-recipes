@@ -8,6 +8,7 @@ app.db*
 
 ### whooshalchemy index ###
 search.db*
+whoosh_index*
 
 ### vim ###
 [._]*.s[a-w][a-z]
