@@ -25,6 +25,7 @@ def before_request():
 def index():
     return render_template(
         'index.html',
+        title='Bon apetit',
         tags=Tag.query.order_by(Tag.name.asc()).all()
     )
 
@@ -32,6 +33,7 @@ def index():
 def browse():
     return render_template(
         'browse.html',
+        title='Browse all',
         recipes=Recipe.query.order_by(Recipe.name.asc()).all()
     )
 
@@ -210,9 +212,9 @@ def edit(id):
         'recipe.html',
         recipe_form=recipe_form,
         all_tags=all_tags,
-        recipe_tags=array_to_csv(recipe_tags).sort(),
+        recipe_tags=array_to_csv(recipe_tags),
         all_recipes=all_recipes,
-        recipe_recipes=array_to_csv(recipe_recipes).sort(),
+        recipe_recipes=array_to_csv(recipe_recipes),
         edit=edit
     )
 
