@@ -32,6 +32,7 @@ def index():
     )
 
 @app.route('/browse')
+@login_required
 def browse():
     return render_template(
         'browse.html',
