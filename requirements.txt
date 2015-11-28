@@ -1,5 +1,5 @@
 flask
-flask-login
+flask-login==0.2.11
 flask-wtf
 flask-markdown
 flask-whooshalchemy

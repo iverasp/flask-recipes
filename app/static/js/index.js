@@ -27,7 +27,7 @@ var update_frontpage = function(page, tags) {
     tags: search_tags
   }
   $.ajax({
-    url: '/api/recipe',
+    url: '/cook/api/recipe',
     data: $.param(params, true),
     success: function(data) {
       console.log(data)
@@ -37,7 +37,7 @@ var update_frontpage = function(page, tags) {
       $.each(data.result, function(index, value) {
         console.log(value)
         var html = ''
-        html += '<h2><a href="/recipe/' + value.id + '">' + value.name + '</a></h2>'
+        html += '<h2><a href="/cook/recipe/' + value.id + '">' + value.name + '</a></h2>'
         html += '<small>Added:' + value.date + '</small>'
         html += '<h5>Ingredients</h5>'
         html += '<p style="white-space:pre-wrap;">' + value.ingredients + '</p>'
