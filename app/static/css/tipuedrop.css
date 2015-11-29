@@ -20,7 +20,7 @@ http://www.tipue.com/drop
      box-shadow: none; 
 	outline: 0;
 	margin: 0;
-	background: #fff url('img/search.png') no-repeat 15px 15px;
+	background: #fff url('cook/static/img/search.png') no-repeat 15px 15px;
 }
 #tipue_drop_input:focus
 {

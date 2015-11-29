@@ -13,7 +13,7 @@ body {
 
 .navbar #search-div input {
   width: 250px;
-  background: #fff url(/static/img/search.png) no-repeat 14px 14px;
+  background: #fff url(/cook/static/img/search.png) no-repeat 14px 14px;
   padding-left:40px;
 }
 
