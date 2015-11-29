@@ -20,7 +20,6 @@ $(window).on('load', function () {
 var update_frontpage = function(page, tags) {
   if (tags == undefined) { search_tags = [] }
   else { search_tags = tags }
-  console.log(search_tags)
   var params = {
     start: page * RECIPES_PER_PAGE,
     end: RECIPES_PER_PAGE * (page + 1),
@@ -30,12 +29,10 @@ var update_frontpage = function(page, tags) {
     url: '/cook/api/recipe',
     data: $.param(params, true),
     success: function(data) {
-      console.log(data)
       $('#recipes-group').empty()
       number_of_recipes = data.length
       $('#recipe-count').html(number_of_recipes)
       $.each(data.result, function(index, value) {
-        console.log(value)
         var html = ''
         html += '<h2><a href="/cook/recipe/' + value.id + '">' + value.name + '</a></h2>'
         html += '<small>Added:' + value.date + '</small>'
@@ -64,21 +61,5 @@ var update_page = function(n) {
     page += n
     update_frontpage(page, active_tags)
   }
-
-  /**
-  // update button states
-  if (page == 0) {
-    $('#prev-button > a').attr('disabled', true)
-  } else {
-    $('#prev-button > a').attr('disabled', false)
-  }
-  console.log('page', page, 'total', number_of_pages())
-  if (page -1  == number_of_pages()) {
-    $('#next-button > a').attr('disabled', true)
-  } else {
-    $('#next-button > a').attr('disabled', false)
-
-  }
-  **/
 
 }
